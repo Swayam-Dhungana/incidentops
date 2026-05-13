@@ -11,6 +11,16 @@ interface SignupSchema{
     email:string,
     password:string
 }
+
+interface LoginSchema{
+    email: string,
+    password: string
+}
+
+const loginSchema=z.object({
+    email: z.email({pattern: z. regexes.email}),
+    password: z.string().min(8,'The minimum number of password is 8').max(50,'The maximum number of length is 50')
+})
 const signupschema=z.object({
     name: z.string().min(3,'Minimum length of name must be 3').max(50, 'The length of name is too long'),
     email: z.email({pattern: z.regexes.email}),
@@ -28,19 +38,25 @@ authRouter.post('/signup',async(c)=>{
     const name=body.name;
     const email=body.email;
     try{
-        const [user] = await sql`
+         await sql`
         INSERT INTO users (fullname, email, password_hash) 
         VALUES (${name}, ${email}, ${hashedPassword})
         RETURNING *
     `;
     }catch(e){
+        console.log(e);        
         return c.text('Failed to create account');
     }
     return c.text('Your account has been initiated');
 })
 
-authRouter.post('/login',(c)=>{
-    return c.text('You are now logged in!');
+authRouter.post('/login',async(c)=>{
+    const body= await c.req.json<LoginSchema>()
+    const validation=await z.safeParse(loginSchema,body)
+    const email= body.email;
+    const password=body.password;
+    // To mimplement we need to assign the session id after the user logins into the server
+    // The type is to be the jwt one. Verify that the user is in session table with user_id mapped for each session
 })
 
 export default authRouter
