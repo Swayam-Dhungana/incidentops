@@ -1,5 +1,5 @@
 import fs from 'fs/promises'
-import sql from '@/db.config'
+import sql from '@/db.config';
 import path from 'path';
 // here direct access failed because ../db/migrations/001_initial_setup.sql runs from the current working dir of the bun not where the script is placed so we replaced it with the updated path config which now makes sense for the provided path 
 
