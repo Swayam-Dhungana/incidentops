@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import z from "zod";
 import * as bcrypt from 'bcrypt';
+import sql from "../../db.config";
 const authRouter=new Hono();
 
 
@@ -24,7 +25,17 @@ authRouter.post('/signup',async(c)=>{
     }
     const password=body.password;
     const hashedPassword= await bcrypt.hash(password,10);
-    
+    const name=body.name;
+    const email=body.email;
+    try{
+        const [user] = await sql`
+        INSERT INTO users (fullname, email, password_hash) 
+        VALUES (${name}, ${email}, ${hashedPassword})
+        RETURNING *
+    `;
+    }catch(e){
+        return c.text('Failed to create account');
+    }
     return c.text('Your account has been initiated');
 })
 
