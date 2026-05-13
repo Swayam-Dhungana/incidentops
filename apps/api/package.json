@@ -4,12 +4,16 @@
   "type": "module",
   "private": true,
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
     "@types/bun": "latest"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
-    "postgres": "^3.4.9"
+    "bcrypt": "^6.0.0",
+    "hono": "^4.12.18",
+    "postgres": "^3.4.9",
+    "zod": "^4.4.3"
   }
 }

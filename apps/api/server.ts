@@ -1,9 +1,11 @@
-const server= Bun.serve({
-    routes:{
-        // add the routes here when defined them
-    },
-    fetch(req) {
-    return new Response("Not Found", { status: 404 });
-  },
+import { Hono } from "hono";
+import authRouter from "./src/routes/auth";
+
+const app=new Hono();
+
+app.get('/',(c)=>{
+  return c.text('503: Service Unavailable')
 })
-console.log(`Server is running at ${server.url}`)
+
+app.route('/api/v1/auth',authRouter)
+export default app;
