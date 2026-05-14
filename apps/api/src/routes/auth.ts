@@ -2,11 +2,11 @@ import { Hono } from "hono";
 import z from "zod";
 import * as bcrypt from 'bcrypt';
 import sql from "../../db.config";
-const authRouter=new Hono();
 import crypto from 'crypto';
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 
 
+const authRouter=new Hono();
 // here i understood the concept of runtime vs compile time type safety the interface can provide safety for the compile time but for runtime a user can enter trash stuff so to prevent that i will need to add a runtime safety too for which we can use zod.
 interface SignupSchema{
     name: string,

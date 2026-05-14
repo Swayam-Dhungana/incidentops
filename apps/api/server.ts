@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import authRouter from "./src/routes/auth";
+import orgRouter from "./src/routes/organization";
 
 const app=new Hono();
 
@@ -8,4 +9,5 @@ app.get('/',(c)=>{
 })
 
 app.route('/api/v1/auth',authRouter)
+app.route('/api/v1/organization',orgRouter)
 export default app;

@@ -8,10 +8,10 @@ export const getUserFromSession=createMiddleware(async(c,next)=>{
         return c.json({success:false, message:'Authentication Failed', error:'Middleware redirected the request'})
     }
     const session_hash=crypto.createHash('sha256').update(session_token).digest('hex');
-    const userId=sql`select id from sessions where session_auth_hash=${session_hash}`;
+    const userId=await sql`select user_id from sessions where session_auth_hash=${session_hash}`;
     if(!userId){
         return c.json({success:false, message:'Authentication Failed', error:'Middleware redirected the request'})
     }
-    c.set('userId',userId);
-    next();
+    c.set('user',{id:userId[0]?.user_id});
+    await next();
 })
