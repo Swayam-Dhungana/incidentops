@@ -3,6 +3,8 @@ import z from "zod";
 import * as bcrypt from 'bcrypt';
 import sql from "../../db.config";
 const authRouter=new Hono();
+import crypto from 'crypto';
+import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 
 
 // here i understood the concept of runtime vs compile time type safety the interface can provide safety for the compile time but for runtime a user can enter trash stuff so to prevent that i will need to add a runtime safety too for which we can use zod.
@@ -53,10 +55,57 @@ authRouter.post('/signup',async(c)=>{
 authRouter.post('/login',async(c)=>{
     const body= await c.req.json<LoginSchema>()
     const validation=await z.safeParse(loginSchema,body)
+    if(validation.error){
+        return c.json({success: false, message: 'Validation Failed', error: validation.error.flatten().fieldErrors},400)
+    }
     const email= body.email;
     const password=body.password;
-    // To mimplement we need to assign the session id after the user logins into the server
-    // The type is to be the jwt one. Verify that the user is in session table with user_id mapped for each session
+        const user=await sql`Select id, email, password_hash from users where email=${email}`;
+        if(!user[0]){
+        return c.json({success:false, message:'Your Email or Password is incorrect', error:'Email or password not found'})
+        }
+    const isValidPassword=await bcrypt.compare(password,user[0].password_hash);
+    if(!isValidPassword){
+        return c.json({success:false, message:'Your Email or Password is incorrect', error:'Email or password not found'})
+    }
+    const session_token=crypto.randomBytes(32).toString('hex');
+    const session_hash=crypto.createHash('sha256').update(session_token).digest('hex');
+    const update_session=await sql`INSERT INTO sessions (user_id, session_auth_hash, expires_at)
+     VALUES (${user[0].id},${session_hash},CURRENT_TIMESTAMP + INTERVAL '1 week')
+    RETURNING id
+    `
+    if(!update_session){
+        return c.json({success:false, message:'Failed to create valid session', error:'Failed to update the session'})
+    }
+    setCookie(c,'session_token',session_token ,{
+        path: '/',
+        secure: false,
+        domain: 'localhost',
+        httpOnly: true,
+        maxAge: 10000,
+        expires: new Date(Date.now()+34560000),
+        sameSite: 'none',
+
+    })
+    return c.json({success:true, message:'Login Successful', error: null});
+})
+
+authRouter.post('/logout',async(c)=>{
+    const session_cookie=getCookie(c,'session_token');
+    if(!session_cookie){
+        return c.json({success:false,message:'Already Logged out', error:null});
+    }
+    const session_hash=crypto.createHash('sha256').update(session_cookie).digest('hex')
+    const deletedRow=await sql`DELETE FROM sessions WHERE session_auth_hash=${session_hash}`
+    if(!deletedRow){
+        return c.json({success:false, message:'Unable to logout', error:'Failed to delete the session'});
+    }
+    deleteCookie(c,'session_token',{
+        path:'/',
+        secure:true,
+        domain:'localhost'
+    })
+    return c.json({success:true, message:'Logout Successfull', error:null});
 })
 
 export default authRouter

@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
+    "crypto": "^1.0.1",
     "hono": "^4.12.18",
     "postgres": "^3.4.9",
     "zod": "^4.4.3"
