@@ -46,4 +46,14 @@ monitorRouter.post('/create',getUserFromSession,async(c)=>{
         return c.json({success: true,message:'Monitor Added successfully'});
 })
 
+
+monitorRouter.post('/start',getUserFromSession,async(c)=>{
+    const body=await c.req.json<{monitor_id: string}>();
+    const monitorState=await sql`INSERT INTO monitor_state (monitor_id) VALUES (${body.monitor_id}) RETURNING id`;
+    if(!monitorState[0]?.id){
+        return c.json({success:false, message:'Failed to start the monitor',error:'Database Failuer'});
+    }
+    return c.json({success:true, message:'Monitor is now active',error:null});
+})
+
 export default monitorRouter;
