@@ -4,7 +4,7 @@ import path from 'path';
 // here direct access failed because ../db/migrations/001_initial_setup.sql runs from the current working dir of the bun not where the script is placed so we replaced it with the updated path config which now makes sense for the provided path 
 
 
-const migrationsPath=path.join(import.meta.dirname, "../../../db/migrations/003_adding_roles.sql") //Relative paths are not always relative to the file.
+const migrationsPath=path.join(import.meta.dirname, "../../../db/migrations/004_monitor_setup.sql") //Relative paths are not always relative to the file.
 
 const migration=await fs.readFile(migrationsPath,'utf-8');
 try{
