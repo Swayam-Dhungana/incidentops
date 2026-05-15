@@ -1,4 +1,4 @@
-import sql from "../../db.config"
+import sql from "../db.config"
 
 interface MonitorRow {
   id: string
