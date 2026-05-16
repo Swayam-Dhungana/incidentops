@@ -1,0 +1,6 @@
+FROM oven/bun:1
+WORKDIR /app
+COPY /apps/workers/package.json /apps/workers/bun.lock ./
+RUN bun install
+COPY apps/workers ./
+CMD ["bun","run","server.ts"]
