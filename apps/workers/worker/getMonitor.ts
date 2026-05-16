@@ -18,7 +18,6 @@ interface MonitorRow {
 }
 export const getMonitor=async():Promise<MonitorRow[]>=>{
   console.log(await sql`SELECT * FROM users`);
-  console.log('first executed');
     const monitor=await sql<MonitorRow[]>`SELECT 
       mc.id,
       mc.service_id,
