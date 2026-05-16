@@ -13,6 +13,34 @@ const envRouter=new Hono<{Variables: Variables}>();
 const setEnvSchema=z.object({
     name: z.string().min(3,'Minimum required name length is 3')
 })
+
+envRouter.get("/list", getUserFromSession, async (c) => {
+  const userId = c.get("user").id
+
+  const environments = await sql`
+    SELECT
+      e.id,
+      e.name,
+      e.organization_id,
+      o.name AS organization_name,
+      e.created_at
+    FROM environments e
+    JOIN organizations o
+      ON o.id = e.organization_id
+    JOIN organization_members om
+      ON om.organization_id = o.id
+    WHERE om.user_id = ${userId}
+    ORDER BY e.created_at DESC
+  `
+
+  return c.json({
+    success: true,
+    message: "Environments fetched successfully",
+    environments,
+    error: null,
+  })
+})
+
 envRouter.post('/create',getUserFromSession,async(c)=>{
     const body=await c.req.json<{name:string}>();
     const validation=z.safeParse(setEnvSchema,body);

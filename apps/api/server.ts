@@ -4,9 +4,17 @@ import orgRouter from "./src/routes/organization";
 import envRouter from "./src/routes/environment";
 import serviceRouter from "./src/routes/service";
 import monitorRouter from "./src/routes/monitor";
+import { cors } from "hono/cors"
 
 const app=new Hono();
 
+app.use(
+  "/*",
+  cors({
+    origin: "http://localhost:3001",
+    credentials: true,
+  })
+)
 app.get('/',(c)=>{
   return c.text('503: Service Unavailable')
 })

@@ -46,6 +46,122 @@ monitorRouter.post('/create',getUserFromSession,async(c)=>{
         return c.json({success: true,message:'Monitor Added successfully'});
 })
 
+monitorRouter.get("/list", getUserFromSession, async (c) => {
+  const userId = c.get("user").id
+
+  const monitors = await sql`
+    SELECT
+      mc.id,
+      mc.service_id,
+      s.name AS service_name,
+      mc.method,
+      mc.url,
+      mc.duration_between_calls,
+      mc.failure_threshold,
+      mc.timeout_seconds,
+      mc.is_active,
+      mc.created_at
+    FROM monitor_config mc
+    JOIN services s
+      ON s.id = mc.service_id
+    JOIN environments e
+      ON e.id = s.environment_id
+    JOIN organization_members om
+      ON om.organization_id = e.organization_id
+    WHERE om.user_id = ${userId}
+    ORDER BY mc.created_at DESC
+  `
+
+  return c.json({
+    success: true,
+    message: "Monitors fetched successfully",
+    monitors,
+    error: null,
+  })
+})
+
+monitorRouter.get("/dashboard", getUserFromSession, async (c) => {
+  const userId = c.get("user").id
+
+  const monitors = await sql`
+    SELECT
+      mc.id AS monitor_id,
+      mc.url,
+      mc.method,
+      mc.duration_between_calls,
+      mc.failure_threshold,
+      mc.timeout_seconds,
+      mc.is_active,
+
+      s.id AS service_id,
+      s.name AS service_name,
+      s.service_status,
+
+      e.id AS environment_id,
+      e.name AS environment_name,
+
+      ms.last_checked_at,
+      ms.last_response_time_ms,
+      ms.consecutive_failure_count,
+      ms.last_failure_at,
+      ms.last_success_at
+    FROM monitor_config mc
+    JOIN services s
+      ON s.id = mc.service_id
+    JOIN environments e
+      ON e.id = s.environment_id
+    JOIN organization_members om
+      ON om.organization_id = e.organization_id
+    LEFT JOIN monitor_state ms
+      ON ms.monitor_id = mc.id
+    WHERE om.user_id = ${userId}
+    ORDER BY ms.last_checked_at DESC NULLS LAST
+  `
+
+  return c.json({
+    success: true,
+    message: "Monitor dashboard fetched successfully",
+    monitors,
+    error: null,
+  })
+})
+
+monitorRouter.get("/:id/history", getUserFromSession, async (c) => {
+  const userId = c.get("user").id
+  const monitorId = c.req.param("id")
+
+  const history = await sql`
+    SELECT
+      mh.id,
+      mh.monitor_id,
+      mh.checked_at,
+      mh.status,
+      mh.status_code,
+      mh.response_time_ms,
+      mh.error_message
+    FROM monitor_history mh
+    JOIN monitor_config mc
+      ON mc.id = mh.monitor_id
+    JOIN services s
+      ON s.id = mc.service_id
+    JOIN environments e
+      ON e.id = s.environment_id
+    JOIN organization_members om
+      ON om.organization_id = e.organization_id
+    WHERE 
+      mh.monitor_id = ${monitorId}
+      AND om.user_id = ${userId}
+    ORDER BY mh.checked_at DESC
+    LIMIT 50
+  `
+
+  return c.json({
+    success: true,
+    message: "Monitor history fetched successfully",
+    history,
+    error: null,
+  })
+})
 
 monitorRouter.post('/start',getUserFromSession,async(c)=>{
     const body=await c.req.json<{monitor_id: string}>();

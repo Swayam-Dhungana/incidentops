@@ -15,7 +15,40 @@ const serviceSchema=z.object({
 })
 const serviceRouter=new Hono<{Variables: Variables}>();
 
-    serviceRouter.post('/create',getUserFromSession,async(c)=>{
+serviceRouter.get("/list", getUserFromSession, async (c) => {
+  const userId = c.get("user").id
+
+  const services = await sql`
+    SELECT
+      s.id,
+      s.name,
+      s.description,
+      s.service_status,
+      s.environment_id,
+      e.name AS environment_name,
+      e.organization_id,
+      o.name AS organization_name,
+      s.created_at
+    FROM services s
+    JOIN environments e
+      ON e.id = s.environment_id
+    JOIN organizations o
+      ON o.id = e.organization_id
+    JOIN organization_members om
+      ON om.organization_id = o.id
+    WHERE om.user_id = ${userId}
+    ORDER BY s.created_at DESC
+  `
+
+  return c.json({
+    success: true,
+    message: "Services fetched successfully",
+    services,
+    error: null,
+  })
+})
+
+serviceRouter.post('/create',getUserFromSession,async(c)=>{
     const body=await c.req.json<{name:string,description:string}>();
     const validation=z.safeParse(serviceSchema,body);
     const userId=c.get('user').id;

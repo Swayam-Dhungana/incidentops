@@ -4,9 +4,14 @@ import * as bcrypt from 'bcrypt';
 import sql from "../../db.config";
 import crypto from 'crypto';
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
+import { getUserFromSession } from "../middlewares/requireAuthenticated";
 
-
-const authRouter=new Hono();
+interface Variables{
+    user:{
+        id: string
+    }
+}
+const authRouter=new Hono<{Variables:Variables}>();
 // here i understood the concept of runtime vs compile time type safety the interface can provide safety for the compile time but for runtime a user can enter trash stuff so to prevent that i will need to add a runtime safety too for which we can use zod.
 interface SignupSchema{
     name: string,
@@ -54,7 +59,7 @@ authRouter.post('/signup',async(c)=>{
 
 authRouter.post('/login',async(c)=>{
     const body= await c.req.json<LoginSchema>()
-    const validation=await z.safeParse(loginSchema,body)
+    const validation=z.safeParse(loginSchema,body)
     if(validation.error){
         return c.json({success: false, message: 'Validation Failed', error: validation.error.flatten().fieldErrors},400)
     }
@@ -80,11 +85,10 @@ authRouter.post('/login',async(c)=>{
     setCookie(c,'session_token',session_token ,{
         path: '/',
         secure: false,
-        domain: 'localhost',
         httpOnly: true,
         maxAge: 10000,
         expires: new Date(Date.now()+34560000),
-        sameSite: 'none',
+        sameSite: 'lax',
 
     })
     return c.json({success:true, message:'Login Successful', error: null});
@@ -106,6 +110,28 @@ authRouter.post('/logout',async(c)=>{
         domain:'localhost'
     })
     return c.json({success:true, message:'Logout Successfull', error:null});
+})
+
+authRouter.get("/me", getUserFromSession, async (c) => {
+  const userId = c.get("user").id
+  const user = await sql`
+    SELECT id, fullname, email, avatar_url
+    FROM users
+    WHERE id = ${userId}
+  `
+  if (!user[0]) {
+    return c.json({
+      success: false,
+      message: "User not found",
+      error: "Invalid session",
+    }, 404)
+  }
+  return c.json({
+    success: true,
+    message: "User fetched successfully",
+    user: user[0],
+    error: null,
+  })
 })
 
 export default authRouter

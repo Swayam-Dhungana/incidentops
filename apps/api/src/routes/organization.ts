@@ -46,5 +46,29 @@ orgRouter.post('/join',getUserFromSession,async(c)=>{
     VALUES (${userId},${orgId[0]?.id})`
     return c.json({success:true, message:'Successfully joined the organization', error:null});
 })
+orgRouter.get("/list", getUserFromSession, async (c) => {
+  const userId = c.get("user").id
+
+  const organizations = await sql`
+    SELECT 
+      o.id,
+      o.name,
+      o.slug,
+      om.role,
+      om.joined_at
+    FROM organizations o
+    JOIN organization_members om
+      ON om.organization_id = o.id
+    WHERE om.user_id = ${userId}
+    ORDER BY om.joined_at DESC
+  `
+
+  return c.json({
+    success: true,
+    message: "Organizations fetched successfully",
+    organizations,
+    error: null,
+  })
+})
 
 export default orgRouter;
