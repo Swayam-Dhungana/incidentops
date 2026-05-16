@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import z from "zod";
 import * as bcrypt from 'bcrypt';
-import {sql} from "../../db.config";
+import sql from "../../db.config";
 import crypto from 'crypto';
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { getUserFromSession } from "../middlewares/requireAuthenticated";

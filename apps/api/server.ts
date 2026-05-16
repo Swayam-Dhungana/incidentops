@@ -5,7 +5,7 @@ import envRouter from "./src/routes/environment";
 import serviceRouter from "./src/routes/service";
 import monitorRouter from "./src/routes/monitor";
 import { cors } from "hono/cors"
-import {sql} from "./db.config";
+import sql from "./db.config";
 
 const app=new Hono();
 

@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { getUserFromSession } from "../middlewares/requireAuthenticated";
 import z, { success } from "zod";
 import crypto from 'crypto'
-import {sql} from "../../db.config";
+import sql from "../../db.config";
 interface Variables{
     user:{id:string}
 }

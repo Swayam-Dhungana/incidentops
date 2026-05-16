@@ -1,4 +1,4 @@
-import {sql} from "../db.config"
+import sql from "../db.config"
 
 interface MonitorRow {
   id: string
@@ -17,7 +17,9 @@ interface MonitorRow {
   last_success_at: Date | null
 }
 export const getMonitor=async():Promise<MonitorRow[]>=>{
-    const monitor=await sql`SELECT 
+  console.log(await sql`SELECT * FROM users`);
+  console.log('first executed');
+    const monitor=await sql<MonitorRow[]>`SELECT 
       mc.id,
       mc.service_id,
       mc.method,
@@ -41,6 +43,6 @@ export const getMonitor=async():Promise<MonitorRow[]>=>{
         ms.last_checked_at IS NULL 
         OR ms.last_checked_at + INTERVAL '1 second' * mc.duration_between_calls <= now()
       )
-    LIMIT 1` as MonitorRow[];
+    LIMIT 1`;
     return monitor;
 }

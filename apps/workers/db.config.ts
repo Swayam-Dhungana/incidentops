@@ -1,13 +1,15 @@
-import { neon } from "@neondatabase/serverless"
+import postgres from "postgres"
 
-const databaseUrl = process.env.DATABASE_URL
+const dbUrl = process.env.DATABASE_URL
 
-if (!databaseUrl) {
-  throw new Error("DATABASE_URL missing")
+if (!dbUrl) {
+  throw new Error("DATABASE_URL is missing")
 }
 
-export const sql = neon(databaseUrl)
+const sql = postgres(dbUrl, {
+  max: 10,
+  idle_timeout: 20,
+  connect_timeout: 30,
+})
 
-const result = await sql`select 1 as ok`
-
-console.log(result)
+export default sql
