@@ -1,7 +1,7 @@
 import { getCookie } from "hono/cookie";
 import { createMiddleware } from "hono/factory";
 import crypto from 'crypto'
-import sql from "../../db.config";
+import {sql} from "../../db.config";
 export const getUserFromSession=createMiddleware(async(c,next)=>{
     const session_token=getCookie(c,'session_token');
     if(!session_token){

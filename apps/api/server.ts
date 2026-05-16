@@ -5,6 +5,7 @@ import envRouter from "./src/routes/environment";
 import serviceRouter from "./src/routes/service";
 import monitorRouter from "./src/routes/monitor";
 import { cors } from "hono/cors"
+import {sql} from "./db.config";
 
 const app=new Hono();
 
@@ -17,6 +18,11 @@ app.use(
 )
 app.get('/',(c)=>{
   return c.text('503: Service Unavailable')
+})
+
+app.get("/db-test", async (c) => {
+  const result = await sql`select 1 as ok`
+  return c.json(result)
 })
 
 app.route('/api/v1/auth',authRouter);

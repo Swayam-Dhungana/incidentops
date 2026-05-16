@@ -10,7 +10,9 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.1.0",
     "hono": "^4.12.18",
-    "postgres": "^3.4.9"
+    "postgres": "^3.4.9",
+    "sql": "^0.78.0"
   }
 }

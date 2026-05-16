@@ -1,4 +1,4 @@
-import sql from "../db.config"
+import {sql} from "../db.config"
 
 interface MakeRequestInput {
   monitor_id: string
@@ -35,17 +35,15 @@ export const makeRequest = async (data: MakeRequestInput) => {
   }
 
   if (isSuccess) {
-    await sql.begin(async(tx)=>{
-        await tx`
+    await sql.transaction([sql`
         UPDATE monitor_state
       SET
         last_checked_at = ${checkedAt},
         last_response_time_ms = ${responseTimeMs},
         consecutive_failure_count = 0,
         last_success_at = ${checkedAt}
-      WHERE monitor_id = ${data.monitor_id}`
-
-      await tx`
+      WHERE monitor_id = ${data.monitor_id}`,
+      sql`
       INSERT INTO monitor_history (
         monitor_id,
         checked_at,
@@ -61,12 +59,11 @@ export const makeRequest = async (data: MakeRequestInput) => {
         ${statusCode},
         ${responseTimeMs},
         NULL
-      )`
-    })
+      )`])
     return
   }
 
-  const state = await sql<{ consecutive_failure_count: number }[]>`
+  const state = await sql`
     SELECT consecutive_failure_count
     FROM monitor_state
     WHERE monitor_id = ${data.monitor_id}
@@ -77,16 +74,16 @@ export const makeRequest = async (data: MakeRequestInput) => {
   const newStatus: CheckStatus =
     newFailureCount >= data.failure_threshold ? "failure" : "success"
 
-  await sql.begin(async(tx)=>{
-    await tx`UPDATE monitor_state
+  await sql.transaction([sql`
+    UPDATE monitor_state
     SET
       last_checked_at = ${checkedAt},
       last_response_time_ms = ${responseTimeMs},
       consecutive_failure_count = ${newFailureCount},
       last_failure_at = ${checkedAt}
-    WHERE monitor_id = ${data.monitor_id}`
+    WHERE monitor_id = ${data.monitor_id}`,
 
-    await tx`
+    sql`
     INSERT INTO monitor_history (
       monitor_id,
       checked_at,
@@ -103,6 +100,6 @@ export const makeRequest = async (data: MakeRequestInput) => {
       ${responseTimeMs},
       ${errorMessage}
     )`
-  })
+  ])
   return
 }

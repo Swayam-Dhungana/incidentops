@@ -1,28 +1,29 @@
-import { Hono } from "hono";
 import { getMonitor } from "./worker/getMonitor";
 import { makeRequest } from "./worker/makeRequest";
-
-const app=new Hono();
 
 const sleep=(ms:number)=>{
     return new Promise((resolve)=>setTimeout(resolve,ms))
 }
+async function startWorker() {
+    try {
+      console.log("cycle started")
 
-async function startWorker(){
-    while(true){
-        const currentMonitor=await getMonitor();
-        if(!currentMonitor[0]){
-            sleep(1000)
-            continue
-        }
-        const {monitor_id,method,failure_threshold,timeout_seconds,url}=currentMonitor[0];
-        const data={
-            monitor_id,method,failure_threshold,timeout_seconds,url
-        }
-        makeRequest(data);
-        await sleep(1000);
+      console.log("before getMonitor")
+      const currentMonitor = await getMonitor()
+      console.log("after getMonitor", currentMonitor.length)
+
+      if (!currentMonitor[0]) {
+        await sleep(1000)
+      }
+
+      console.log("before makeRequest")
+      await makeRequest(currentMonitor[0]!)
+      console.log("after makeRequest")
+
+      await sleep(1000)
+    } catch (error) {
+      console.log("Worker Failed", error)
+      await sleep(5000)
     }
-}
-
+  }
 startWorker();
-export default app;

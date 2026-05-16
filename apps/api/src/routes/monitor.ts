@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { getUserFromSession } from "../middlewares/requireAuthenticated";
 import z from "zod";
-import sql from "../../db.config";
+import {sql} from "../../db.config";
 
 
 interface Variables{
