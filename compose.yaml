@@ -3,35 +3,58 @@ services:
     image: postgres:16
     container_name: incidentops_db
     environment:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
     volumes:
       - incidentops_pgdata:/var/lib/postgresql/data
-  
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+
+  migrator:
+    image: postgres:16
+    container_name: incidentops_migrator
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      MIGRATIONS_DIR: /migrations
+    volumes:
+      - ./db/migrations:/migrations:ro
+      - ./scripts/migrate.sh:/migrate.sh:ro
+    entrypoint: ["bash", "/migrate.sh"]
+
   api:
     build:
       context: .
       dockerfile: apps/api/dockerfile
     container_name: api-container
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
     env_file:
       - apps/api/.env
     ports:
       - "3000:3000"
-    depends_on:
-      - postgres
-  
+
   web:
     build:
       context: .
       dockerfile: apps/web/dockerfile
     container_name: web-container
     env_file:
-    - apps/web/.env
+      - apps/web/.env
     ports:
-    - "4000:3000"
+      - "4000:3000"
     depends_on:
       - api
 
@@ -43,7 +66,8 @@ services:
     env_file:
       - apps/workers/.env
     depends_on:
-      - postgres
+      migrator:
+        condition: service_completed_successfully
 
 volumes:
   incidentops_pgdata:
