@@ -1,9 +1,9 @@
+**/node_modules
+**/.next
+**/dist
+**/build
 **/.env
 **/.env.*
-**/node_modules
 .git
-.next
-dist
-build
 logs
 *.log

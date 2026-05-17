@@ -23,6 +23,17 @@ services:
     depends_on:
       - postgres
   
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/dockerfile
+    container_name: web-container
+    env_file:
+    - apps/web/.env
+    ports:
+    - "4000:3000"
+    depends_on:
+      - api
 
   worker:
     build:

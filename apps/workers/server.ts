@@ -12,10 +12,8 @@ async function startWorker() {
       if (!currentMonitor[0]) {
         await sleep(1000)
       }
-      console.log('hmm')
       await makeRequest(currentMonitor[0]!)
       await sleep(1000)
-      console.log('working 2');
     } catch (error) {
       await sleep(5000)
     }
