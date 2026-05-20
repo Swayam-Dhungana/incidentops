@@ -12,7 +12,11 @@ const app=new Hono();
 app.use(
   "/*",
   cors({
-    origin: "http://localhost:4000",
+    origin: [
+      "http://localhost:4000",
+      "https://incidentops.tech",
+      "https://www.incidentops.tech",
+    ],
     credentials: true,
   })
 )
